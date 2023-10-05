@@ -25,12 +25,14 @@ public class ProdutoDao {
      * @param produto O produto a ser cadastrado.
      */
     public void cadastrarProduto(Produto produto) {
-        String sql = "INSERT INTO tb_produtos (descricao, preco, quantidade_estoque) VALUES (?, ?, ?) ";
+        String sql = "INSERT INTO tb_produtos (codigo, descricao, preco, quantidade_estoque, ncm) VALUES (?, ?, ?, ?, ?) ";
         try {
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, produto.getDescricao());
-            stmt.setBigDecimal(2, produto.getPreco());
-            stmt.setInt(3, produto.getQuandidade());
+            stmt.setString(1, produto.getCodigo());
+            stmt.setString(2, produto.getDescricao());
+            stmt.setBigDecimal(3, produto.getPreco());
+            stmt.setInt(4, produto.getQuandidade());
+            stmt.setInt(5, produto.getNcm());
             stmt.executeUpdate();
             stmt.close();
             JOptionPane.showMessageDialog(null, "Produto cadastrado com sucesso");
@@ -53,14 +55,18 @@ public class ProdutoDao {
 
             while (rs.next()) {
                 Integer id = rs.getInt("id");
+                String codigo = rs.getString("codigo");
                 String descricao = rs.getString("descricao");
                 BigDecimal preco = rs.getBigDecimal("preco");
                 Integer quantidade = rs.getInt("quantidade_estoque");
+                Integer ncm = rs.getInt("ncm");
                 Produto produto = new Produto();
                 produto.setId(id);
+                produto.setCodigo(codigo);
                 produto.setDescricao(descricao);
                 produto.setPreco(preco);
                 produto.setQuandidade(quantidade);
+                produto.setNcm(ncm);
                 lista.add(produto);
             }
 
@@ -95,13 +101,15 @@ public class ProdutoDao {
      * @param produto produto a ser editado.
      */
     public void editarProduto(Produto produto) {
-        String sql = "UPDATE tb_produtos SET descricao = ?, preco = ?, quantidade_estoque = ? WHERE id = ? ";
+        String sql = "UPDATE tb_produtos SET codigo = ?, descricao = ?, preco = ?, quantidade_estoque = ?, ncm = ? WHERE id = ? ";
         try {
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, produto.getDescricao());
-            stmt.setBigDecimal(2, produto.getPreco());
-            stmt.setInt(3, produto.getQuandidade());
-            stmt.setInt(4, produto.getId());
+            stmt.setString(1, produto.getCodigo());
+            stmt.setString(2, produto.getDescricao());
+            stmt.setBigDecimal(3, produto.getPreco());
+            stmt.setInt(4, produto.getQuandidade());
+            stmt.setInt(5, produto.getNcm());
+            stmt.setInt(6, produto.getId());
             stmt.executeUpdate();
             stmt.close();
             JOptionPane.showMessageDialog(null, "Produto editado com sucesso");
@@ -126,14 +134,56 @@ public class ProdutoDao {
 
             while (rs.next()) {
                 Integer id = rs.getInt("id");
+                String codigo = rs.getString("codigo");
                 String descricao = rs.getString("descricao");
                 BigDecimal preco = rs.getBigDecimal("preco");
                 Integer quantidade = rs.getInt("quantidade_estoque");
+                Integer ncm = rs.getInt("ncm");
                 Produto produto = new Produto();
                 produto.setId(id);
+                produto.setCodigo(codigo);
                 produto.setDescricao(descricao);
                 produto.setPreco(preco);
                 produto.setQuandidade(quantidade);
+                produto.setNcm(ncm);
+                lista.add(produto);
+            }
+            return lista;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e);
+            return null;
+        }
+    }
+
+    /**
+     * Lista produtos que correspondem a um nome ou código desejado.
+     *
+     * @param nomeOuCodigoDesejado O nome ou código desejado para filtrar produtos.
+     * @return Uma lista de produtos que correspondem ao nome ou código desejado.
+     */
+    public List<Produto> listarProdutosPorNomeOuCodigo(String nomeOuCodigoDesejado) {
+        String sql = "SELECT * FROM tb_produtos WHERE codigo LIKE ? OR descricao LIKE ?";
+        try {
+            List<Produto> lista = new ArrayList<>();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, "%" + nomeOuCodigoDesejado.toUpperCase() + "%");
+            stmt.setString(2, "%" + nomeOuCodigoDesejado.toUpperCase() + "%");
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Integer id = rs.getInt("id");
+                String codigo = rs.getString("codigo");
+                String descricao = rs.getString("descricao");
+                BigDecimal preco = rs.getBigDecimal("preco");
+                Integer quantidade = rs.getInt("quantidade_estoque");
+                Integer ncm = rs.getInt("ncm");
+                Produto produto = new Produto();
+                produto.setId(id);
+                produto.setCodigo(codigo);
+                produto.setDescricao(descricao);
+                produto.setPreco(preco);
+                produto.setQuandidade(quantidade);
+                produto.setNcm(ncm);
                 lista.add(produto);
             }
             return lista;
@@ -153,9 +203,11 @@ public class ProdutoDao {
         String sql = "SELECT * FROM tb_produtos WHERE id = ?";
         try {
             Integer idProduto;
+            String codigo;
+            Integer quantidade;
+            Integer ncm;
             String descricao;
             BigDecimal preco;
-            Integer quantidade;
 
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, Integer.parseInt(id));
@@ -163,15 +215,19 @@ public class ProdutoDao {
 
             if (rs.next()) {
                 idProduto = rs.getInt("id");
+                codigo = rs.getString("codigo");
                 descricao = rs.getString("descricao");
                 preco = rs.getBigDecimal("preco");
                 quantidade = rs.getInt("quantidade_estoque");
+                ncm = rs.getInt("ncm");
 
                 Produto produto = new Produto();
                 produto.setId(idProduto);
+                produto.setCodigo(codigo);
                 produto.setDescricao(descricao);
                 produto.setPreco(preco);
                 produto.setQuandidade(quantidade);
+                produto.setNcm(ncm);
 
                 return produto;
             }
@@ -247,5 +303,97 @@ public class ProdutoDao {
         }
         return null;
     }
+
+
+    /**
+     * Retorna a quantidade atual em estoque de um produto com base no seu codigo.
+     *
+     * @param codigo O codigo do produto.
+     * @return A quantidade atual em estoque do produto ou null se não encontrado.
+     */
+    public Integer retornaEstoqueAtualPorCodigo(String codigo) {
+        String sql = "SELECT quantidade_estoque FROM tb_produtos WHERE codigo = ?";
+        Integer quantidadeEstoque = 0;
+        try {
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, codigo);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                quantidadeEstoque = rs.getInt("quantidade_estoque");
+            }
+
+            return quantidadeEstoque;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e);
+        }
+        return null;
+    }
+
+    /**
+     * Busca um produto no banco de dados com base no seu código.
+     *
+     * @param codigoProcurado O código do produto a ser buscado.
+     * @return O produto correspondente ao código especificado ou null se não encontrado.
+     */
+    public Produto buscarProdutoPorCodigo(String codigoProcurado) {
+        String sql = "SELECT * FROM tb_produtos WHERE codigo = ?";
+        try {
+            Integer idProduto;
+            String codigo;
+            Integer quantidade;
+            Integer ncm;
+            String descricao;
+            BigDecimal preco;
+
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, codigoProcurado);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                idProduto = rs.getInt("id");
+                codigo = rs.getString("codigo");
+                descricao = rs.getString("descricao");
+                preco = rs.getBigDecimal("preco");
+                quantidade = rs.getInt("quantidade_estoque");
+                ncm = rs.getInt("ncm");
+
+                Produto produto = new Produto();
+                produto.setId(idProduto);
+                produto.setCodigo(codigo);
+                produto.setDescricao(descricao);
+                produto.setPreco(preco);
+                produto.setQuandidade(quantidade);
+                produto.setNcm(ncm);
+
+                return produto;
+            }
+            else {
+                JOptionPane.showMessageDialog(null, "Produto com código " + codigoProcurado + " não encontrado");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e);
+
+        }
+        return null;
+    }
+
+    public Integer buscarIdPorCodigo(String codigo) {
+        String sql = "SELECT id FROM tb_produtos WHERE codigo = ?";
+        Integer id = null;
+        try {
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, codigo);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                id = rs.getInt("id");
+            }
+            return id;
+        } catch (SQLException e) {
+            return null;
+        }
+    }
+
+
 
 }

@@ -22,10 +22,20 @@ public class ClienteDao {
      * @param cliente passamos como parâmetro uma instância da classe Cliente, de onde buscaremos as informações a serem registradas no banco
      */
     public void cadastrarCliente(Cliente cliente) {
-        String sql = "INSERT INTO tb_clientes (nome) VALUES (?) ";
+        String sql = "INSERT INTO tb_clientes (nome, documento, email, celular, cep, endereco, numero, complemento, bairro, cidade, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
         try {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, cliente.getNome());
+            stmt.setString(2, cliente.getDocumento());
+            stmt.setString(3, cliente.getEmail());
+            stmt.setString(4, cliente.getCelular());
+            stmt.setString(5, cliente.getCep());
+            stmt.setString(6, cliente.getEndereco());
+            stmt.setString(7, cliente.getNumero());
+            stmt.setString(8, cliente.getComplemento());
+            stmt.setString(9, cliente.getBairro());
+            stmt.setString(10, cliente.getCidade());
+            stmt.setString(11, cliente.getEstado());
             stmt.executeUpdate();
             stmt.close();
             JOptionPane.showMessageDialog(null, "Cliente cadastrado com sucesso");
@@ -50,9 +60,29 @@ public class ClienteDao {
 
                 Integer id = rs.getInt("id");
                 String nome = rs.getString("nome");
+                String documento = rs.getString("documento");
+                String email = rs.getString("email");
+                String celular = rs.getString("celular");
+                String cep = rs.getString("cep");
+                String endereco = rs.getString("endereco");
+                String numero = rs.getString("numero");
+                String complemento = rs.getString("complemento");
+                String bairro = rs.getString("bairro");
+                String cidade = rs.getString("cidade");
+                String estado = rs.getString("estado");
 
                 cliente.setId(id);
                 cliente.setNome(nome);
+                cliente.setDocumento(documento);
+                cliente.setEmail(email);
+                cliente.setCelular(celular);
+                cliente.setCep(cep);
+                cliente.setEndereco(endereco);
+                cliente.setNumero(numero);
+                cliente.setComplemento(complemento);
+                cliente.setBairro(bairro);
+                cliente.setCidade(cidade);
+                cliente.setEstado(estado);
                 lista.add(cliente);
             }
             return lista;
@@ -86,11 +116,21 @@ public class ClienteDao {
      * @param cliente passamos um objeto cliente como parâmetro
      */
     public void editarCliente(Cliente cliente) {
-        String sql = "UPDATE tb_clientes SET nome = ? WHERE id = ? ";
+        String sql = "UPDATE tb_clientes SET nome = ?, documento = ?, email = ?, celular = ?, cep = ?, endereco = ?, numero = ?, complemento = ?, bairro = ?, cidade = ?, estado = ? WHERE id = ? ";
         try {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, cliente.getNome());
-            stmt.setInt(2, cliente.getId());
+            stmt.setString(2, cliente.getDocumento());
+            stmt.setString(3, cliente.getEmail());
+            stmt.setString(4, cliente.getCelular());
+            stmt.setString(5, cliente.getCep());
+            stmt.setString(6, cliente.getEndereco());
+            stmt.setString(7, cliente.getNumero());
+            stmt.setString(8, cliente.getComplemento());
+            stmt.setString(9, cliente.getBairro());
+            stmt.setString(10, cliente.getCidade());
+            stmt.setString(11, cliente.getEstado());
+            stmt.setInt(12, cliente.getId());
             stmt.executeUpdate();
             stmt.close();
             JOptionPane.showMessageDialog(null, "Cliente editado com sucesso");
@@ -98,6 +138,10 @@ public class ClienteDao {
             JOptionPane.showMessageDialog(null, "Erro ao editar: " + e);
         }
     }
+
+//    public Integer buscarIdClientePorCodigo(String codigo) {
+//        String sql = "SELECT id FROM";
+//    }
 
     /**
      * listamos os registros de clientes na "tb_clientes" com base em determinado nome passado como parâmetro
@@ -114,10 +158,33 @@ public class ClienteDao {
 
             while (rs.next()) {
                 Cliente cliente = new Cliente();
+
                 Integer id = rs.getInt("id");
                 String nome = rs.getString("nome");
+                String documento = rs.getString("documento");
+                String email = rs.getString("email");
+                String celular = rs.getString("celular");
+                String cep = rs.getString("cep");
+                String endereco = rs.getString("endereco");
+                String numero = rs.getString("numero");
+                String complemento = rs.getString("complemento");
+                String bairro = rs.getString("bairro");
+                String cidade = rs.getString("cidade");
+                String estado = rs.getString("estado");
+
                 cliente.setId(id);
                 cliente.setNome(nome);
+                cliente.setDocumento(documento);
+                cliente.setEmail(email);
+                cliente.setCelular(celular);
+                cliente.setCep(cep);
+                cliente.setEndereco(endereco);
+                cliente.setNumero(numero);
+                cliente.setComplemento(complemento);
+                cliente.setBairro(bairro);
+                cliente.setCidade(cidade);
+                cliente.setEstado(estado);
+
                 lista.add(cliente);
             }
             return lista;
@@ -137,7 +204,7 @@ public class ClienteDao {
         String sql = "SELECT * FROM tb_clientes WHERE id = ?";
         try {
             Integer idCliente;
-            String nomeCliente;
+            String nome, documento, email, celular, cep, endereco, numero, complemento, bairro, cidade, estado;
 
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, Integer.parseInt(id));
@@ -145,11 +212,31 @@ public class ClienteDao {
 
             if (rs.next()) {
                 idCliente = rs.getInt("id");
-                nomeCliente = rs.getString("nome");
+                nome = rs.getString("nome");
+                documento = rs.getString("documento");
+                email = rs.getString("email");
+                celular = rs.getString("celular");
+                cep = rs.getString("cep");
+                endereco = rs.getString("endereco");
+                numero = rs.getString("numero");
+                complemento = rs.getString("complemento");
+                bairro = rs.getString("bairro");
+                cidade = rs.getString("cidade");
+                estado = rs.getString("estado");
 
                 Cliente cliente = new Cliente();
                 cliente.setId(idCliente);
-                cliente.setNome(nomeCliente);
+                cliente.setNome(nome);
+                cliente.setDocumento(documento);
+                cliente.setEmail(email);
+                cliente.setCelular(celular);
+                cliente.setCep(cep);
+                cliente.setEndereco(endereco);
+                cliente.setNumero(numero);
+                cliente.setComplemento(complemento);
+                cliente.setBairro(bairro);
+                cliente.setCidade(cidade);
+                cliente.setEstado(estado);
 
                 return cliente;
             }
