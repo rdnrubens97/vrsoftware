@@ -3,6 +3,8 @@ package com.vrs.projetovrs.service;
 import com.vrs.projetovrs.dao.ProdutoDao;
 import com.vrs.projetovrs.model.Produto;
 
+import javax.swing.*;
+import java.sql.SQLException;
 import java.util.List;
 
 public class ProdutoService {
@@ -12,51 +14,111 @@ public class ProdutoService {
     }
 
     public void cadastrarProduto(Produto produto) {
-        produtoDao.cadastrarProduto(produto);
+        try {
+            produtoDao.cadastrarProduto(produto);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public void editarProduto(Produto produto) {
-        produtoDao.editarProduto(produto);
+        try {
+            produtoDao.editarProduto(produto);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public void excluirProduto(Integer idProduto) {
-        produtoDao.excluirProduto(idProduto);
+        try {
+            produtoDao.excluirProduto(idProduto);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public List<Produto> listarProdutos() {
-        return produtoDao.listarProdutos();
+        try {
+            return produtoDao.listarProdutos();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public List<Produto> listarProdutosPorNome(String nomeDesejado) {
-        return produtoDao.listarProdutosPorNome(nomeDesejado);
+        try {
+            return produtoDao.listarProdutosPorNome(nomeDesejado);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public List<Produto> listarProdutosPorNomeOuCodigo(String nomeOuCodigoDesejado) {
-        return produtoDao.listarProdutosPorNomeOuCodigo(nomeOuCodigoDesejado);
+        try {
+            return produtoDao.listarProdutosPorNomeOuCodigo(nomeOuCodigoDesejado);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public Integer retornaEstoqueAtual(Integer idProduto) {
-        return produtoDao.retornaEstoqueAtual(idProduto);
+        try {
+            return produtoDao.retornaEstoqueAtual(idProduto);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public Integer retornaEstoqueAtualPorCodigo(String codigo) {
-        return produtoDao.retornaEstoqueAtualPorCodigo(codigo);
+        try {
+            return produtoDao.retornaEstoqueAtualPorCodigo(codigo);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public void adicionarEstoque(Integer idProduto, Integer quantidadeNova) {
-        produtoDao.adicionarEstoque(idProduto, quantidadeNova);
+        try {
+            produtoDao.adicionarEstoque(idProduto, quantidadeNova);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public void baixarEstoque(Integer idProduto, Integer quantidadeAtualizada) {
-        produtoDao.baixarEstoque(idProduto, quantidadeAtualizada);
+        try {
+            produtoDao.baixarEstoque(idProduto, quantidadeAtualizada);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public Produto buscarProdutoPorCodigo(String codigo) {
-        return produtoDao.buscarProdutoPorCodigo(codigo);
+        try {
+            return produtoDao.buscarProdutoPorCodigo(codigo);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public Integer buscarIdPorCodigo(String codigoPeca) {
-        return produtoDao.buscarIdPorCodigo(codigoPeca);
+        try {
+            return produtoDao.buscarIdPorCodigo(codigoPeca);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
 

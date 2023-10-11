@@ -114,7 +114,7 @@ public class EstoqueView extends javax.swing.JFrame {
      */
     private void validarCampos(Integer idProduto ,String descricao, Integer quantidade) throws ValidationException {
         if (idProduto == null || descricao.isEmpty() || quantidade <= 0 ) {
-            throw new ValidationException("Valores inválidos");
+            throw new ValidationException();
         }
     }
 

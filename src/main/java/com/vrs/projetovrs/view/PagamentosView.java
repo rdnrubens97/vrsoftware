@@ -6,13 +6,13 @@ package com.vrs.projetovrs.view;
 
 import com.vrs.projetovrs.dao.ItemVendaDao;
 import com.vrs.projetovrs.dao.ProdutoDao;
+import com.vrs.projetovrs.dao.ServicoDao;
 import com.vrs.projetovrs.dao.VendaDao;
-import com.vrs.projetovrs.model.Cliente;
-import com.vrs.projetovrs.model.ItemVenda;
-import com.vrs.projetovrs.model.Produto;
-import com.vrs.projetovrs.model.Venda;
+import com.vrs.projetovrs.model.*;
 import com.vrs.projetovrs.model.status.Status;
+import com.vrs.projetovrs.service.ItemVendaService;
 import com.vrs.projetovrs.service.ProdutoService;
+import com.vrs.projetovrs.service.ServicoService;
 import com.vrs.projetovrs.service.VendaService;
 
 import javax.swing.*;
@@ -26,8 +26,11 @@ import java.util.Date;
 public class PagamentosView extends javax.swing.JFrame {
     private VendaService vendaService;
     private ProdutoService produtoService;
+    private ItemVendaService itemVendaService;
+    private ServicoService servicoService;
     Cliente clientePagamentoView = new Cliente();
     DefaultTableModel carrinhoDeComprasPagamentoView;
+    DefaultTableModel tabelaMaoDeObraPdvPagamentoView;
 
     /**
      * Creates new form PagamentosView
@@ -35,9 +38,12 @@ public class PagamentosView extends javax.swing.JFrame {
     public PagamentosView() {
         initComponents();
         carrinhoDeComprasPagamentoView = (DefaultTableModel) new DefaultTableModel();
+        tabelaMaoDeObraPdvPagamentoView = (DefaultTableModel) new DefaultTableModel();
         setLocationRelativeTo(null);
         vendaService = new VendaService(new VendaDao());
         produtoService = new ProdutoService(new ProdutoDao());
+        itemVendaService = new ItemVendaService(new ItemVendaDao());
+        servicoService = new ServicoService(new ServicoDao());
     }
 
     /**
@@ -46,9 +52,7 @@ public class PagamentosView extends javax.swing.JFrame {
      */
     private void botaoFinalizarVendaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botaoFinalizarVendaActionPerformed
         Date agora = new Date();
-
-        BigDecimal pagCartao, pagDinheiro, totalPago, totalVenda, troco;
-
+        BigDecimal pagCartao, pagDinheiro, totalPago, totalVenda, troco, totalMaoDeObra;
         pagCartao = !textoCartaoPagamento.getText().equals("") ? new BigDecimal(textoCartaoPagamento.getText().replace(",", ".")) : BigDecimal.ZERO;
         pagDinheiro = !textoDinheiroPagamento.getText().equals("") ? new BigDecimal(textoDinheiroPagamento.getText().replace(",", ".")) : BigDecimal.ZERO;
         totalVenda = new BigDecimal(textoTotalPagamento.getText());
@@ -66,17 +70,13 @@ public class PagamentosView extends javax.swing.JFrame {
             venda.setStatus(Status.EFETIVADA);
 
             vendaService.cadastrarVenda(venda);
-            venda.setId(vendaService.retornaIdDaUltimaVenda());
+            venda.setId(vendaService.retornarIdDaUltimaVenda());
 
             for (int i = 0; i < carrinhoDeComprasPagamentoView.getRowCount(); i++) {
                 Integer quantidadeEstoque, quantidadeComprada, quantidadeAtualizada;
-
-
                 Produto produto = new Produto();
-
                 String codigoPeca = carrinhoDeComprasPagamentoView.getValueAt(i, 0).toString();
                 Integer id = produtoService.buscarIdPorCodigo(codigoPeca);
-
                 produto.setId(id);
 
                 ItemVenda item = new ItemVenda();
@@ -91,9 +91,18 @@ public class PagamentosView extends javax.swing.JFrame {
                 quantidadeAtualizada = quantidadeEstoque - quantidadeComprada;
 
                 produtoService.baixarEstoque(produto.getId(), quantidadeAtualizada);
+                itemVendaService.cadastrarItem(item);
+            }
 
-                ItemVendaDao itemVendaDao = new ItemVendaDao();
-                itemVendaDao.cadastrarItem(item);
+            for (int i = 0; i < tabelaMaoDeObraPdvPagamentoView.getRowCount(); i++) {
+                String descricao = tabelaMaoDeObraPdvPagamentoView.getValueAt(i, 0).toString();
+                BigDecimal preco = new BigDecimal(tabelaMaoDeObraPdvPagamentoView.getValueAt(i, 1).toString());
+
+                Servico servico = new Servico();
+                servico.setIdVenda(venda.getId());
+                servico.setDescricao(descricao);
+                servico.setPreco(preco);
+                servicoService.salvarServico(servico);
             }
 
             JOptionPane.showMessageDialog(null, "Venda registrada com sucesso. \nTroco: R$ " + troco);

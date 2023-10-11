@@ -147,9 +147,7 @@ public class ProdutoView extends javax.swing.JFrame {
      */
     private void textoDescricaoPesquisaProdutoKeyPressed(java.awt.event.KeyEvent evt) {
         String nomeOuCodigoDesejado = textoDescricaoPesquisaProduto.getText();
-
-        ProdutoDao dao = new ProdutoDao();
-        List<Produto> listaDeProdutos = dao.listarProdutosPorNomeOuCodigo(nomeOuCodigoDesejado);
+        List<Produto> listaDeProdutos = produtoService.listarProdutosPorNomeOuCodigo(nomeOuCodigoDesejado);
 
         DefaultTableModel dados = (DefaultTableModel) tabelaExibicaoProdutos.getModel();
         dados.setNumRows(0);
@@ -326,7 +324,7 @@ public class ProdutoView extends javax.swing.JFrame {
      */
     private void validarCampos(String codigo, String descricao, BigDecimal preco, Integer quantidade) throws ValidationException {
         if (codigo.isEmpty() || descricao.isEmpty() || preco.compareTo(BigDecimal.ZERO) <= 0 || quantidade <= 0) {
-            throw new ValidationException("Valores inválidos");
+            throw new ValidationException();
         }
     }
 

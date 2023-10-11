@@ -4,11 +4,16 @@
  */
 package com.vrs.projetovrs.view;
 
+import com.vrs.projetovrs.dao.ClienteDao;
 import com.vrs.projetovrs.dao.ItemVendaDao;
+import com.vrs.projetovrs.dao.ServicoDao;
 import com.vrs.projetovrs.dao.VendaDao;
 import com.vrs.projetovrs.model.ItemVenda;
+import com.vrs.projetovrs.model.Servico;
 import com.vrs.projetovrs.model.Venda;
+import com.vrs.projetovrs.service.ClienteService;
 import com.vrs.projetovrs.service.ItemVendaService;
+import com.vrs.projetovrs.service.ServicoService;
 import com.vrs.projetovrs.service.VendaService;
 
 import javax.swing.*;
@@ -23,16 +28,20 @@ import java.util.List;
  * @author Rubens
  */
 public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
+    private ClienteService clienteService;
     private VendaService vendaService;
     private ItemVendaService itemVendaService;
+    private ServicoService servicoService;
 
     /**
      * Creates new form HistoricoVendasView
      */
     public HistoricoVendasConsolidadoView() {
         initComponents();
+        clienteService = new ClienteService(new ClienteDao());
         vendaService = new VendaService(new VendaDao());
         itemVendaService = new ItemVendaService(new ItemVendaDao());
+        servicoService = new ServicoService(new ServicoDao());
     }
 
     /**
@@ -54,7 +63,8 @@ public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
         dados.setNumRows(0);
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        for (Venda venda : listaDeVendas){
+        for (int i = listaDeVendas.size() - 1; i >= 0; i--){
+            Venda venda = listaDeVendas.get(i);
             String dataFormatada = simpleDateFormat.format(venda.getData());
             dados.addRow(new Object[]{
                     venda.getId(),
@@ -84,7 +94,8 @@ public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
             dados.setNumRows(0);
 
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy");
-            for (Venda venda : listaDeVendas){
+            for (int i = listaDeVendas.size() - 1; i >= 0; i--){
+                Venda venda = listaDeVendas.get(i);
                 String dataFormatada = simpleDateFormat.format(venda.getData());
                 dados.addRow(new Object[]{
                         venda.getId(),
@@ -117,13 +128,16 @@ public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
 
         Integer idVenda = Integer.parseInt(tabelaHistoricoDeVendas.getValueAt(tabelaHistoricoDeVendas.getSelectedRow(), 0).toString());
         List<ItemVenda> itemVendaLista = itemVendaService.listaItensDeUmaVenda(idVenda);
+        List<Servico> servicoList = servicoService.listarServicosDeUmaVenda(idVenda);
 
-        DefaultTableModel dados = (DefaultTableModel) viewVendasDetalhes.tabelaItensVendidosHistoricoVendasDetalhada.getModel();
-        dados.setNumRows(0);
+        DefaultTableModel dadosItensVendidos = (DefaultTableModel) viewVendasDetalhes.tabelaItensVendidosHistoricoVendasDetalhada.getModel();
+        DefaultTableModel dadosServicosPrestados = (DefaultTableModel) viewVendasDetalhes.tabelaServicosHistoricoVendasDetalhada.getModel();
+        dadosItensVendidos.setNumRows(0);
+        dadosServicosPrestados.setNumRows(0);
 
         for (ItemVenda itemVenda : itemVendaLista) {
-            dados.addRow(new Object[]{
-                    itemVenda.getId(),
+            dadosItensVendidos.addRow(new Object[]{
+                    itemVenda.getProduto().getCodigo(),
                     itemVenda.getProduto().getDescricao(),
                     itemVenda.getQuantidade(),
                     "R$ " + itemVenda.getProduto().getPreco(),
@@ -131,8 +145,56 @@ public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
             });
         }
 
+        for (Servico servico : servicoList) {
+            dadosServicosPrestados.addRow(new Object[]{
+                    servico.getDescricao(),
+                    "R$ " + servico.getPreco()
+            });
+        }
+
         viewVendasDetalhes.setVisible(true);
     }//GEN-LAST:event_tabelaHistoricoDeVendasMouseClicked
+
+    private void textoBuscaClienteHistoricoVendasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_textoBuscaClienteHistoricoVendasActionPerformed
+
+    }//GEN-LAST:event_textoBuscaClienteHistoricoVendasActionPerformed
+
+    /**
+     * faz uma busca instantânea por vendas que tenham sido realizadas para clientes que tenham no nome os caracteres inseridos no campo de busca
+     * @param evt
+     */
+    private void textoBuscaClienteHistoricoVendasKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_textoBuscaClienteHistoricoVendasKeyPressed
+        String nomeCliente = textoBuscaClienteHistoricoVendas.getText().toUpperCase();
+        List<Venda> vendas = vendaService.retornarVendasPorNome(nomeCliente);
+        BigDecimal valorTotal = BigDecimal.ZERO;
+
+        DefaultTableModel dados = (DefaultTableModel) tabelaHistoricoDeVendas.getModel();
+        dados.setNumRows(0);
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        for (int i = vendas.size() - 1; i >= 0; i--){
+            Venda venda = vendas.get(i);
+            String dataFormatada = simpleDateFormat.format(venda.getData());
+            dados.addRow(new Object[]{
+                    venda.getId(),
+                    dataFormatada,
+                    venda.getCliente().getNome(),
+                    "R$ " + venda.getValorTotal(),
+                    venda.getStatus().toString()
+            });
+            if (venda.getStatus().toString().equals("EFETIVADA")) valorTotal = valorTotal.add(venda.getValorTotal());
+        }
+        textoValorTotalHistoricoVendas.setText("R$ " + valorTotal.toString().replace(".", ","));
+
+
+
+    }//GEN-LAST:event_textoBuscaClienteHistoricoVendasKeyPressed
+
+    private void botaoLimparVendasPorDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botaoLimparVendasPorDataActionPerformed
+        textoDataInicioHistoricoVendas.setText("");
+        textoDataFimHistoricoVendas.setText("");
+        preencherTabelaInicio();
+    }//GEN-LAST:event_botaoLimparVendasPorDataActionPerformed
 
     private void botaoImprimirRelatorioConsolidadoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botaoImprimirRelatorioConsolidadoActionPerformed
 
@@ -199,6 +261,9 @@ public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
         campoValorTotalHistoricoVendas = new javax.swing.JLabel();
         textoValorTotalHistoricoVendas = new javax.swing.JTextField();
         botaoImprimirRelatorioConsolidado = new javax.swing.JButton();
+        campoBuscaClienteHistoricoVendas = new javax.swing.JLabel();
+        textoBuscaClienteHistoricoVendas = new javax.swing.JTextField();
+        botaoLimparVendasPorData = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         tabelaHistoricoDeVendas = new javax.swing.JTable();
 
@@ -219,18 +284,18 @@ public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
         javax.swing.GroupLayout painelTituloHistoricoVendasLayout = new javax.swing.GroupLayout(painelTituloHistoricoVendas);
         painelTituloHistoricoVendas.setLayout(painelTituloHistoricoVendasLayout);
         painelTituloHistoricoVendasLayout.setHorizontalGroup(
-                painelTituloHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(painelTituloHistoricoVendasLayout.createSequentialGroup()
-                                .addGap(240, 240, 240)
-                                .addComponent(jLabel1)
-                                .addContainerGap(262, Short.MAX_VALUE))
+            painelTituloHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(painelTituloHistoricoVendasLayout.createSequentialGroup()
+                .addGap(240, 240, 240)
+                .addComponent(jLabel1)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         painelTituloHistoricoVendasLayout.setVerticalGroup(
-                painelTituloHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(painelTituloHistoricoVendasLayout.createSequentialGroup()
-                                .addGap(15, 15, 15)
-                                .addComponent(jLabel1)
-                                .addContainerGap(14, Short.MAX_VALUE))
+            painelTituloHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(painelTituloHistoricoVendasLayout.createSequentialGroup()
+                .addGap(15, 15, 15)
+                .addComponent(jLabel1)
+                .addContainerGap(14, Short.MAX_VALUE))
         );
 
         painelSelecaoDatasHistoricoVendas.setBackground(new java.awt.Color(102, 102, 102));
@@ -238,7 +303,7 @@ public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
 
         campoDataHistoricoVendas.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         campoDataHistoricoVendas.setForeground(new java.awt.Color(255, 255, 255));
-        campoDataHistoricoVendas.setText("Data Inicial");
+        campoDataHistoricoVendas.setText(" Data Inicial");
         campoDataHistoricoVendas.setBorder(new javax.swing.border.MatteBorder(null));
 
         try {
@@ -255,7 +320,7 @@ public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
 
         campoDataHistoricoVendas1.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         campoDataHistoricoVendas1.setForeground(new java.awt.Color(255, 255, 255));
-        campoDataHistoricoVendas1.setText("Data Final");
+        campoDataHistoricoVendas1.setText(" Data Final");
         campoDataHistoricoVendas1.setBorder(new javax.swing.border.MatteBorder(null));
 
         try {
@@ -265,7 +330,7 @@ public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
         }
         textoDataFimHistoricoVendas.setFont(new java.awt.Font("Segoe UI", 0, 22)); // NOI18N
 
-        botaoPesquisarVendasPorData.setBackground(new java.awt.Color(255, 255, 255));
+        botaoPesquisarVendasPorData.setBackground(new java.awt.Color(51, 153, 255));
         botaoPesquisarVendasPorData.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         botaoPesquisarVendasPorData.setForeground(new java.awt.Color(0, 0, 0));
         botaoPesquisarVendasPorData.setText("Pesquisar");
@@ -275,17 +340,17 @@ public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
             }
         });
 
-        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 15)); // NOI18N
         jLabel2.setForeground(new java.awt.Color(255, 255, 255));
         jLabel2.setText("Para maiores detalhes, selecione a venda que deseja analisar");
 
         campoValorTotalHistoricoVendas.setBackground(new java.awt.Color(0, 0, 0));
         campoValorTotalHistoricoVendas.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         campoValorTotalHistoricoVendas.setForeground(new java.awt.Color(255, 255, 255));
-        campoValorTotalHistoricoVendas.setText("Valor Total");
+        campoValorTotalHistoricoVendas.setText(" Valor Total");
 
         textoValorTotalHistoricoVendas.setEditable(false);
-        textoValorTotalHistoricoVendas.setFont(new java.awt.Font("Segoe UI", 0, 30)); // NOI18N
+        textoValorTotalHistoricoVendas.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
 
         botaoImprimirRelatorioConsolidado.setBackground(new java.awt.Color(153, 204, 255));
         botaoImprimirRelatorioConsolidado.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
@@ -297,66 +362,111 @@ public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
             }
         });
 
+        campoBuscaClienteHistoricoVendas.setBackground(new java.awt.Color(0, 0, 0));
+        campoBuscaClienteHistoricoVendas.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        campoBuscaClienteHistoricoVendas.setForeground(new java.awt.Color(255, 255, 255));
+        campoBuscaClienteHistoricoVendas.setText("Busca Cliente");
+
+        textoBuscaClienteHistoricoVendas.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
+        textoBuscaClienteHistoricoVendas.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                textoBuscaClienteHistoricoVendasActionPerformed(evt);
+            }
+        });
+        textoBuscaClienteHistoricoVendas.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                textoBuscaClienteHistoricoVendasKeyPressed(evt);
+            }
+        });
+
+        botaoLimparVendasPorData.setBackground(new java.awt.Color(255, 51, 51));
+        botaoLimparVendasPorData.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        botaoLimparVendasPorData.setForeground(new java.awt.Color(0, 0, 0));
+        botaoLimparVendasPorData.setText("Limpar");
+        botaoLimparVendasPorData.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                botaoLimparVendasPorDataActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout painelSelecaoDatasHistoricoVendasLayout = new javax.swing.GroupLayout(painelSelecaoDatasHistoricoVendas);
         painelSelecaoDatasHistoricoVendas.setLayout(painelSelecaoDatasHistoricoVendasLayout);
         painelSelecaoDatasHistoricoVendasLayout.setHorizontalGroup(
-                painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(painelSelecaoDatasHistoricoVendasLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                        .addComponent(botaoPesquisarVendasPorData, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addGroup(painelSelecaoDatasHistoricoVendasLayout.createSequentialGroup()
-                                                .addComponent(campoDataHistoricoVendas1, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                                .addComponent(textoDataFimHistoricoVendas))
-                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, painelSelecaoDatasHistoricoVendasLayout.createSequentialGroup()
-                                                .addComponent(campoDataHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                                .addComponent(textoDataInicioHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, painelSelecaoDatasHistoricoVendasLayout.createSequentialGroup()
-                                                .addComponent(campoValorTotalHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, 166, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                                        .addComponent(botaoImprimirRelatorioConsolidado, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                        .addComponent(textoValorTotalHistoricoVendas, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 291, Short.MAX_VALUE))
-                                                .addContainerGap())
-                                        .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.TRAILING)))
+            painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(painelSelecaoDatasHistoricoVendasLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(painelSelecaoDatasHistoricoVendasLayout.createSequentialGroup()
+                        .addComponent(campoDataHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(textoDataInicioHistoricoVendas))
+                    .addGroup(painelSelecaoDatasHistoricoVendasLayout.createSequentialGroup()
+                        .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(campoDataHistoricoVendas1, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(painelSelecaoDatasHistoricoVendasLayout.createSequentialGroup()
+                                .addGap(3, 3, 3)
+                                .addComponent(botaoLimparVendasPorData, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(botaoPesquisarVendasPorData, javax.swing.GroupLayout.PREFERRED_SIZE, 176, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(textoDataFimHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 19, Short.MAX_VALUE)
+                .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(campoValorTotalHistoricoVendas, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 137, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(campoBuscaClienteHistoricoVendas, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(painelSelecaoDatasHistoricoVendasLayout.createSequentialGroup()
+                        .addComponent(textoValorTotalHistoricoVendas)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(botaoImprimirRelatorioConsolidado, javax.swing.GroupLayout.PREFERRED_SIZE, 190, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(textoBuscaClienteHistoricoVendas)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, painelSelecaoDatasHistoricoVendasLayout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addContainerGap())))
         );
         painelSelecaoDatasHistoricoVendasLayout.setVerticalGroup(
-                painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addGroup(painelSelecaoDatasHistoricoVendasLayout.createSequentialGroup()
-                                .addComponent(botaoImprimirRelatorioConsolidado)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(textoValorTotalHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(campoValorTotalHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(14, 14, 14)
-                                .addComponent(jLabel2))
-                        .addGroup(painelSelecaoDatasHistoricoVendasLayout.createSequentialGroup()
-                                .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                        .addComponent(textoDataInicioHistoricoVendas, javax.swing.GroupLayout.Alignment.TRAILING)
-                                        .addComponent(campoDataHistoricoVendas, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                        .addComponent(textoDataFimHistoricoVendas)
-                                        .addComponent(campoDataHistoricoVendas1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(botaoPesquisarVendasPorData, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE))
+            painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+            .addGroup(painelSelecaoDatasHistoricoVendasLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(campoValorTotalHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textoValorTotalHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(botaoImprimirRelatorioConsolidado))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(campoBuscaClienteHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textoBuscaClienteHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel2)
+                .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(painelSelecaoDatasHistoricoVendasLayout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(textoDataInicioHistoricoVendas, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(campoDataHistoricoVendas, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(textoDataFimHistoricoVendas)
+                    .addComponent(campoDataHistoricoVendas1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(painelSelecaoDatasHistoricoVendasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(botaoPesquisarVendasPorData, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(botaoLimparVendasPorData, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(55, 55, 55))
         );
 
         tabelaHistoricoDeVendas.setFont(new java.awt.Font("Segoe UI", 0, 17)); // NOI18N
         tabelaHistoricoDeVendas.setModel(new javax.swing.table.DefaultTableModel(
-                new Object [][] {
+            new Object [][] {
 
-                },
-                new String [] {
-                        "Nº venda", "Data", "Cliente", "Total", "Status"
-                }
+            },
+            new String [] {
+                "Nº venda", "Data", "Cliente", "Total", "Status"
+            }
         ) {
             boolean[] canEdit = new boolean [] {
-                    false, false, false, false, false
+                false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -373,24 +483,24 @@ public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(painelTituloHistoricoVendas, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                        .addComponent(jScrollPane1)
-                                        .addComponent(painelSelecaoDatasHistoricoVendas, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addContainerGap())
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(painelTituloHistoricoVendas, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(painelSelecaoDatasHistoricoVendas, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                                .addComponent(painelTituloHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(painelSelecaoDatasHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 421, Short.MAX_VALUE)
-                                .addContainerGap())
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(painelTituloHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(painelSelecaoDatasHistoricoVendas, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 371, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
@@ -399,7 +509,9 @@ public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton botaoImprimirRelatorioConsolidado;
+    private javax.swing.JButton botaoLimparVendasPorData;
     private javax.swing.JButton botaoPesquisarVendasPorData;
+    private javax.swing.JLabel campoBuscaClienteHistoricoVendas;
     private javax.swing.JLabel campoDataHistoricoVendas;
     private javax.swing.JLabel campoDataHistoricoVendas1;
     private javax.swing.JLabel campoValorTotalHistoricoVendas;
@@ -409,6 +521,7 @@ public class HistoricoVendasConsolidadoView extends javax.swing.JFrame {
     private javax.swing.JPanel painelSelecaoDatasHistoricoVendas;
     private javax.swing.JPanel painelTituloHistoricoVendas;
     private javax.swing.JTable tabelaHistoricoDeVendas;
+    private javax.swing.JTextField textoBuscaClienteHistoricoVendas;
     private javax.swing.JFormattedTextField textoDataFimHistoricoVendas;
     private javax.swing.JFormattedTextField textoDataInicioHistoricoVendas;
     private javax.swing.JTextField textoValorTotalHistoricoVendas;

@@ -7,6 +7,7 @@ package com.vrs.projetovrs.view;
 import com.vrs.projetovrs.dao.ClienteDao;
 import com.vrs.projetovrs.dao.ProdutoDao;
 import com.vrs.projetovrs.model.Cliente;
+import com.vrs.projetovrs.model.MaoDeObra;
 import com.vrs.projetovrs.service.ClienteService;
 import com.vrs.projetovrs.service.ProdutoService;
 
@@ -25,10 +26,11 @@ import java.util.Date;
 public class VendaView extends javax.swing.JFrame {
     ClienteService clienteService;
     ProdutoService produtoService;
-    BigDecimal total = BigDecimal.ZERO;
+    BigDecimal totalPecas = BigDecimal.ZERO;
     BigDecimal preco, subtotal;
     Integer quantidade;
     DefaultTableModel carrinhoDeComprasVendaView;
+    DefaultTableModel tabelaMaoDeObraVendaView;
     Cliente clienteVendaView = new Cliente();
 
     /**
@@ -44,6 +46,9 @@ public class VendaView extends javax.swing.JFrame {
         textoDataPdv.setEnabled(false);
         textoIdentificadorProdutoPdv.setEnabled(false);
         textoDescricaoProdutoPdv.setEnabled(false);
+        textoTotalProdutosPdv.setText("R$ " + BigDecimal.ZERO);
+        textoTotalMaoDeObraPdv.setText("R$ " + BigDecimal.ZERO);
+        textoTotalVendaPdv.setText("R$ " + BigDecimal.ZERO);
     }
 
     private void formWindowActivated(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowActivated
@@ -71,6 +76,7 @@ public class VendaView extends javax.swing.JFrame {
      * @param evt O evento que desencadeou a ação do botão.
      */
     private void botaoAcicionarItemPdvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botaoAcicionarItemPdvActionPerformed
+        verificaSeTemQuantidadeInserida(textoQuantidadeProdutoPdv.getText());
         String codigo = textoIdentificadorProdutoPdv.getText();
         quantidade = Integer.parseInt(textoQuantidadeProdutoPdv.getText());
 
@@ -78,8 +84,8 @@ public class VendaView extends javax.swing.JFrame {
 
             preco = new BigDecimal(textoPrecoProdutoPdv.getText().replace("R$ ", ""));
             subtotal = preco.multiply(BigDecimal.valueOf(quantidade));
-            total = total.add(subtotal);
-            textoTotalProdutosPdv.setText(total.toString());
+            totalPecas = totalPecas.add(subtotal);
+            textoTotalProdutosPdv.setText(totalPecas.toString());
             carrinhoDeComprasVendaView = (DefaultTableModel) tabelaItensVenda.getModel();
             String identificadorProduto = textoIdentificadorProdutoPdv.getText();
             boolean identificadorExistente = false;
@@ -100,8 +106,8 @@ public class VendaView extends javax.swing.JFrame {
                         break;
                     }
                     else {
-                        total = total.subtract(subtotal);
-                        textoTotalProdutosPdv.setText(total.toString());
+                        totalPecas = totalPecas.subtract(subtotal);
+                        textoTotalProdutosPdv.setText(totalPecas.toString());
                         return;
                     }
                 }
@@ -131,14 +137,25 @@ public class VendaView extends javax.swing.JFrame {
         }
     }
 
+    private void verificaSeTemQuantidadeInserida(String quantidadeSelecionada) {
+        if (quantidadeSelecionada.isEmpty()){
+            JOptionPane.showMessageDialog(null, "Defina uma quantidade para esse produto");
+            throw new RuntimeException();
+        }
+    }
+
     private void botaoEfetivarVendaPdvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botaoEfetivarVendaPdvActionPerformed
-        String nomeCliente = textoIdentificadorClientePdv.getText();
-        verificaSeTemClienteSelecionado(nomeCliente);
-        clienteVendaView = clienteService.buscarClientePorId(nomeCliente);
+        String idCliente = textoIdentificadorClientePdv.getText();
+        verificaSeTemClienteSelecionado(idCliente);
+        clienteVendaView = clienteService.buscarClientePorId(idCliente);
         PagamentosView pagamentosView = new PagamentosView();
-        pagamentosView.textoTotalPagamento.setText(total.toString());
+        BigDecimal totalVenda = new BigDecimal(textoTotalVendaPdv.getText().replace("R$ ", ""));
+        pagamentosView.textoTotalPagamento.setText(totalVenda.toString());
+        //aqui será inserido os dados da mão de obra
         pagamentosView.clientePagamentoView = clienteVendaView;
         pagamentosView.carrinhoDeComprasPagamentoView = carrinhoDeComprasVendaView;
+        DefaultTableModel tabelaMaoDeObraVendaView = (DefaultTableModel) tabelaMaoDeObraPdv.getModel();
+        pagamentosView.tabelaMaoDeObraPdvPagamentoView = tabelaMaoDeObraVendaView;
         pagamentosView.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_botaoEfetivarVendaPdvActionPerformed
@@ -161,16 +178,21 @@ public class VendaView extends javax.swing.JFrame {
         return true;
     }
 
+    private void botaoAdicionarMaoDeObraPdvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botaoAdicionarMaoDeObraPdvActionPerformed
+        InserirMaoDeObraView inserirMaoDeObraView = new InserirMaoDeObraView(this);
+        inserirMaoDeObraView.setVisible(true);
+    }//GEN-LAST:event_botaoAdicionarMaoDeObraPdvActionPerformed
+
     /**
      * atualiza o valor do campo de texto que indica o valor total da venda
      */
-    private void atualizaTextosDeTotaisRelativosAVenda() {
+    public void atualizaTextosDeTotaisRelativosAVenda() {
         atualizarTextoTotalProdutosPdv();
         atualizarTextoTotalMaoDeObraPdv();
-        BigDecimal valorProdutos = new BigDecimal(textoTotalProdutosPdv.getText());
-        BigDecimal valorMaoDeObra = new BigDecimal(textoTotalMaoDeObraPdv.getText());
+        BigDecimal valorProdutos = new BigDecimal(textoTotalProdutosPdv.getText().replace("R$ ", ""));
+        BigDecimal valorMaoDeObra = new BigDecimal(textoTotalMaoDeObraPdv.getText().replace("R$ ", ""));
         BigDecimal valorTotalVenda = valorProdutos.add(valorMaoDeObra);
-        textoTotalVendaPdv.setText(valorTotalVenda.toString());
+        textoTotalVendaPdv.setText("R$ " + valorTotalVenda);
     }
 
     /**
@@ -178,14 +200,14 @@ public class VendaView extends javax.swing.JFrame {
      */
     private void atualizarTextoTotalProdutosPdv() {
         DefaultTableModel carrinhoDeComprasVendaView = (DefaultTableModel) tabelaItensVenda.getModel();
-        BigDecimal valorTotal = BigDecimal.ZERO;
+        BigDecimal valorProduto = BigDecimal.ZERO;
         for (int i = 0; i < carrinhoDeComprasVendaView.getRowCount(); i++) {
             BigDecimal valorItem = (BigDecimal) carrinhoDeComprasVendaView.getValueAt(i, 4);
             if (valorItem != null) {
-                valorTotal = valorTotal.add(valorItem);
+                valorProduto = valorProduto.add(valorItem);
             }
         }
-        textoTotalProdutosPdv.setText(valorTotal.toString());
+        textoTotalProdutosPdv.setText("R$ " + valorProduto);
     }
 
     /**
@@ -193,14 +215,14 @@ public class VendaView extends javax.swing.JFrame {
      */
     private void atualizarTextoTotalMaoDeObraPdv() {
         DefaultTableModel tabelaMaoDeObraPdvModel = (DefaultTableModel) tabelaMaoDeObraPdv.getModel();
-        BigDecimal valorTotal = BigDecimal.ZERO;
+        BigDecimal valorMaoDeObra = BigDecimal.ZERO;
         for (int i = 0; i < tabelaMaoDeObraPdvModel.getRowCount(); i++) {
-            BigDecimal valorItem = (BigDecimal) tabelaMaoDeObraPdvModel.getValueAt(i, 4);
+            BigDecimal valorItem = (BigDecimal) tabelaMaoDeObraPdvModel.getValueAt(i, 1);
             if (valorItem != null) {
-                valorTotal = valorTotal.add(valorItem);
+                valorMaoDeObra = valorMaoDeObra.add(valorItem);
             }
         }
-        textoTotalMaoDeObraPdv.setText(valorTotal.toString());
+        textoTotalMaoDeObraPdv.setText("R$ " + valorMaoDeObra);
     }
 
     /**
@@ -434,7 +456,7 @@ public class VendaView extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 511, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jLabel1)
                 .addGap(95, 95, 95)
                 .addComponent(campoNomeCadastro3, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -464,6 +486,7 @@ public class VendaView extends javax.swing.JFrame {
 
         textoDescricaoProdutoPdv.setEditable(false);
         textoDescricaoProdutoPdv.setBackground(new java.awt.Color(255, 255, 255));
+        textoDescricaoProdutoPdv.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         textoDescricaoProdutoPdv.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         textoDescricaoProdutoPdv.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -516,7 +539,7 @@ public class VendaView extends javax.swing.JFrame {
 
         campoNomeCadastro5.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         campoNomeCadastro5.setForeground(new java.awt.Color(0, 0, 0));
-        campoNomeCadastro5.setText("QTD.");
+        campoNomeCadastro5.setText("  QTD.");
         campoNomeCadastro5.setBorder(new javax.swing.border.MatteBorder(null));
 
         textoPrecoProdutoPdv.setBackground(new java.awt.Color(255, 255, 255));
@@ -533,6 +556,7 @@ public class VendaView extends javax.swing.JFrame {
             }
         });
 
+        botaoAcicionarItemPdv.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         botaoAcicionarItemPdv.setText("ADICIONAR PRODUTO");
         botaoAcicionarItemPdv.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -555,9 +579,9 @@ public class VendaView extends javax.swing.JFrame {
             .addGroup(painelDadosProdutoPdvLayout.createSequentialGroup()
                 .addGroup(painelDadosProdutoPdvLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(painelDadosProdutoPdvLayout.createSequentialGroup()
-                        .addGroup(painelDadosProdutoPdvLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(campoNomeCadastro, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(campoNomeCadastro1))
+                        .addGroup(painelDadosProdutoPdvLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(campoNomeCadastro1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(campoNomeCadastro, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(painelDadosProdutoPdvLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(painelDadosProdutoPdvLayout.createSequentialGroup()
@@ -570,7 +594,7 @@ public class VendaView extends javax.swing.JFrame {
                     .addGroup(painelDadosProdutoPdvLayout.createSequentialGroup()
                         .addComponent(campoNomeCadastro4, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textoPrecoProdutoPdv)
+                        .addComponent(textoPrecoProdutoPdv, javax.swing.GroupLayout.PREFERRED_SIZE, 148, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(campoNomeCadastro5, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -612,6 +636,7 @@ public class VendaView extends javax.swing.JFrame {
 
         textoIdentificadorClientePdv.setBackground(new java.awt.Color(255, 255, 255));
         textoIdentificadorClientePdv.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
+        textoIdentificadorClientePdv.setForeground(new java.awt.Color(0, 0, 0));
         textoIdentificadorClientePdv.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         textoIdentificadorClientePdv.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -738,7 +763,7 @@ public class VendaView extends javax.swing.JFrame {
             .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 342, Short.MAX_VALUE)
         );
 
-        painelTotalVendaPdv.setBackground(new java.awt.Color(255, 255, 0));
+        painelTotalVendaPdv.setBackground(new java.awt.Color(255, 204, 51));
         painelTotalVendaPdv.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Total de Venda", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 0, 18), new java.awt.Color(0, 0, 0))); // NOI18N
 
         campoTotalProdutosPdv.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
@@ -746,6 +771,7 @@ public class VendaView extends javax.swing.JFrame {
         campoTotalProdutosPdv.setText("   Total Produtos");
         campoTotalProdutosPdv.setBorder(new javax.swing.border.MatteBorder(null));
 
+        textoTotalProdutosPdv.setEditable(false);
         textoTotalProdutosPdv.setBackground(new java.awt.Color(255, 255, 255));
         textoTotalProdutosPdv.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         textoTotalProdutosPdv.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
@@ -765,6 +791,7 @@ public class VendaView extends javax.swing.JFrame {
         campoTotalMaoDeObraPdv.setText("   Mao de Obra");
         campoTotalMaoDeObraPdv.setBorder(new javax.swing.border.MatteBorder(null));
 
+        textoTotalMaoDeObraPdv.setEditable(false);
         textoTotalMaoDeObraPdv.setBackground(new java.awt.Color(255, 255, 255));
         textoTotalMaoDeObraPdv.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         textoTotalMaoDeObraPdv.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
@@ -784,6 +811,7 @@ public class VendaView extends javax.swing.JFrame {
         campoTotalVendaPdv.setText("  Total de Venda");
         campoTotalVendaPdv.setBorder(new javax.swing.border.MatteBorder(null));
 
+        textoTotalVendaPdv.setEditable(false);
         textoTotalVendaPdv.setBackground(new java.awt.Color(255, 255, 255));
         textoTotalVendaPdv.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         textoTotalVendaPdv.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
@@ -803,37 +831,35 @@ public class VendaView extends javax.swing.JFrame {
         painelTotalVendaPdvLayout.setHorizontalGroup(
             painelTotalVendaPdvLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(painelTotalVendaPdvLayout.createSequentialGroup()
-                .addComponent(campoTotalProdutosPdv, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(textoTotalProdutosPdv))
-            .addGroup(painelTotalVendaPdvLayout.createSequentialGroup()
                 .addComponent(campoTotalVendaPdv, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(textoTotalVendaPdv))
             .addGroup(painelTotalVendaPdvLayout.createSequentialGroup()
-                .addComponent(campoTotalMaoDeObraPdv, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(painelTotalVendaPdvLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(campoTotalProdutosPdv, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(campoTotalMaoDeObraPdv, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(textoTotalMaoDeObraPdv))
+                .addGroup(painelTotalVendaPdvLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(textoTotalProdutosPdv)
+                    .addComponent(textoTotalMaoDeObraPdv)))
         );
         painelTotalVendaPdvLayout.setVerticalGroup(
             painelTotalVendaPdvLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(painelTotalVendaPdvLayout.createSequentialGroup()
+                .addGap(1, 1, 1)
                 .addGroup(painelTotalVendaPdvLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(campoTotalProdutosPdv, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(textoTotalProdutosPdv, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(campoTotalProdutosPdv, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textoTotalProdutosPdv, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(painelTotalVendaPdvLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(campoTotalMaoDeObraPdv, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(painelTotalVendaPdvLayout.createSequentialGroup()
-                        .addComponent(textoTotalMaoDeObraPdv)
-                        .addGap(3, 3, 3)))
+                .addGroup(painelTotalVendaPdvLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(campoTotalMaoDeObraPdv, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textoTotalMaoDeObraPdv, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(painelTotalVendaPdvLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(campoTotalVendaPdv, javax.swing.GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
                     .addComponent(textoTotalVendaPdv))
                 .addGap(0, 1, Short.MAX_VALUE))
         );
-
-        painelTotalVendaPdvLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {campoTotalMaoDeObraPdv, campoTotalProdutosPdv, campoTotalVendaPdv});
 
         jPanel2.setBackground(new java.awt.Color(204, 204, 204));
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Mão de Obra", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 0, 18), new java.awt.Color(0, 0, 0))); // NOI18N
@@ -849,7 +875,7 @@ public class VendaView extends javax.swing.JFrame {
         ));
         jScrollPane2.setViewportView(tabelaMaoDeObraPdv);
         if (tabelaMaoDeObraPdv.getColumnModel().getColumnCount() > 0) {
-            tabelaMaoDeObraPdv.getColumnModel().getColumn(0).setPreferredWidth(700);
+            tabelaMaoDeObraPdv.getColumnModel().getColumn(0).setPreferredWidth(560);
         }
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -860,7 +886,7 @@ public class VendaView extends javax.swing.JFrame {
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 270, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
         );
 
         botaoEfetivarVendaPdv.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
@@ -876,6 +902,11 @@ public class VendaView extends javax.swing.JFrame {
 
         botaoAdicionarMaoDeObraPdv.setFont(new java.awt.Font("Segoe UI", 0, 15)); // NOI18N
         botaoAdicionarMaoDeObraPdv.setText("INSERIR MÃO DE OBRA");
+        botaoAdicionarMaoDeObraPdv.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                botaoAdicionarMaoDeObraPdvActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -924,10 +955,12 @@ public class VendaView extends javax.swing.JFrame {
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(botaoAdicionarMaoDeObraPdv, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(botaoGerarOrcamentoPdv, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                .addComponent(botaoGerarOrcamentoPdv, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
+
+        layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {botaoAdicionarMaoDeObraPdv, botaoGerarOrcamentoPdv});
 
         pack();
         setLocationRelativeTo(null);
@@ -960,7 +993,7 @@ public class VendaView extends javax.swing.JFrame {
     private javax.swing.JPanel painelDadosProdutoPdv;
     private javax.swing.JPanel painelTotalVendaPdv;
     public javax.swing.JTable tabelaItensVenda;
-    private javax.swing.JTable tabelaMaoDeObraPdv;
+    public javax.swing.JTable tabelaMaoDeObraPdv;
     private javax.swing.JTextField textoDataPdv;
     public javax.swing.JTextField textoDescricaoProdutoPdv;
     public javax.swing.JTextField textoIdentificadorClientePdv;

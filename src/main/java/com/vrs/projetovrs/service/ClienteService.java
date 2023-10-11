@@ -3,6 +3,8 @@ package com.vrs.projetovrs.service;
 import com.vrs.projetovrs.dao.ClienteDao;
 import com.vrs.projetovrs.model.Cliente;
 
+import javax.swing.*;
+import java.sql.SQLException;
 import java.util.List;
 
 public class ClienteService {
@@ -12,27 +14,57 @@ public class ClienteService {
     }
 
     public List<Cliente> listarClientes() {
-        return clienteDao.listarClientes();
+        try {
+            return clienteDao.listarClientes();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public List<Cliente> listarClientesPorNome(String nomeDesejado) {
-        return clienteDao.listarClientesPorNome(nomeDesejado);
+        try {
+            return clienteDao.listarClientesPorNome(nomeDesejado);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public Cliente buscarClientePorId(String idCliente) {
-        return clienteDao.buscarClientePorId(idCliente);
+        try {
+            return clienteDao.buscarClientePorId(idCliente);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public void cadastrarCliente(Cliente cliente) {
-        clienteDao.cadastrarCliente(cliente);
+        try {
+            clienteDao.cadastrarCliente(cliente);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public void editarCliente(Cliente cliente) {
-        clienteDao.editarCliente(cliente);
+        try {
+            clienteDao.editarCliente(cliente);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public void excluirCliente(Integer idCliente) {
-        clienteDao.excluirCliente(idCliente);
+        try {
+            clienteDao.excluirCliente(idCliente);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
 }

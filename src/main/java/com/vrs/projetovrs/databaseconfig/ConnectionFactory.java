@@ -67,13 +67,14 @@ public class ConnectionFactory {
 
     private void verificarETabelas(Connection connection, Statement statement) throws Exception {
         // Tabelas a serem verificadas e criadas
-        String[] tabelas = {"tb_clientes", "tb_produtos", "tb_vendas", "tb_itensvendas"};
+        String[] tabelas = {"tb_clientes", "tb_vendas", "tb_produtos", "tb_servicos", "tb_itensvendas"};
 
         for (String tabela : tabelas) {
             if (!checkIfTableExists(statement, tabela)) {
                 executeSqlScript(statement, "scripts/script_" + tabela + ".sql");
             }
         }
+
     }
 
     private boolean checkIfTableExists(Statement statement, String tableName) throws Exception {

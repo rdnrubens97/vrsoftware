@@ -1,10 +1,11 @@
 package com.vrs.projetovrs.service;
 
 import com.vrs.projetovrs.dao.VendaDao;
-import com.vrs.projetovrs.model.ItemVenda;
 import com.vrs.projetovrs.model.Venda;
 import com.vrs.projetovrs.model.status.Status;
 
+import javax.swing.*;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -15,23 +16,57 @@ public class VendaService {
     }
 
     public void cadastrarVenda(Venda venda) {
-        vendaDao.cadastrarVenda(venda);
+        try {
+            vendaDao.cadastrarVenda(venda);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public List<Venda> listarVendasDoUltimoMes() {
-        return vendaDao.listarVendasDoUltimoMes();
+        try {
+            return vendaDao.listarVendasDoUltimoMes();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public List<Venda> listarVendasPorPeriodo(LocalDate dataInicio, LocalDate dataFim) {
-        return vendaDao.listarVendasPorPeriodo(dataInicio, dataFim);
+        try {
+            return vendaDao.listarVendasPorPeriodo(dataInicio, dataFim);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
     public void estornarVendaPorId(Integer idVenda, Status status) {
-        vendaDao.estornarVendaPorId(idVenda, status);
+        try {
+            vendaDao.estornarVendaPorId(idVenda, status);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
-    public Integer retornaIdDaUltimaVenda() {
-        return vendaDao.retornaIdDaUltimaVenda();
+    public Integer retornarIdDaUltimaVenda() {
+        try {
+            return vendaDao.retornarIdDaUltimaVenda();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
+    }
+
+    public List<Venda> retornarVendasPorNome(String nome) {
+        try {
+            return vendaDao.retornarVendasPorNome(nome);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
+            throw new RuntimeException("Erro: " + e.getMessage());
+        }
     }
 
 }
