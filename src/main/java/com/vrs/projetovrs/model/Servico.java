@@ -1,6 +1,7 @@
 package com.vrs.projetovrs.model;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 public class Servico {
     private Integer id;
@@ -38,5 +39,17 @@ public class Servico {
 
     public void setPreco(BigDecimal preco) {
         this.preco = preco;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Servico servico)) return false;
+        return getIdVenda().equals(servico.getIdVenda()) && getDescricao().equals(servico.getDescricao()) && getPreco().equals(servico.getPreco());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getIdVenda(), getDescricao(), getPreco());
     }
 }

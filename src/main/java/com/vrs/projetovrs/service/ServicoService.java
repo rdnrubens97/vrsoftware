@@ -31,7 +31,7 @@ public class ServicoService {
         try {
             return servicoDao.listarServicosDeUmaVenda(idVenda);
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Erro: " + idVenda);
+            JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
     }

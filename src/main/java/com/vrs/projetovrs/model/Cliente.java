@@ -1,5 +1,7 @@
 package com.vrs.projetovrs.model;
 
+import java.util.Objects;
+
 public class Cliente {
     private Integer id;
     private String nome;
@@ -24,7 +26,10 @@ public class Cliente {
     }
 
     public String getNome() {
-        return nome.toUpperCase().replaceAll("\\s+", " ");
+        if (nome != null) {
+            return nome.toUpperCase().replaceAll("\\s+", " ");
+        }
+        return null;
     }
 
     public void setNome(String nome) {
@@ -109,5 +114,17 @@ public class Cliente {
 
     public void setEstado(String estado) {
         this.estado = estado.toUpperCase().replaceAll("\\s+", " ");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Cliente cliente)) return false;
+        return Objects.equals(getId(), cliente.getId()) && getNome().equals(cliente.getNome()) && Objects.equals(getDocumento(), cliente.getDocumento()) && Objects.equals(getEmail(), cliente.getEmail()) && getCelular().equals(cliente.getCelular()) && Objects.equals(getCep(), cliente.getCep()) && Objects.equals(getEndereco(), cliente.getEndereco()) && Objects.equals(getNumero(), cliente.getNumero()) && Objects.equals(getComplemento(), cliente.getComplemento()) && Objects.equals(getBairro(), cliente.getBairro()) && Objects.equals(getCidade(), cliente.getCidade()) && Objects.equals(getEstado(), cliente.getEstado());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getNome(), getDocumento(), getEmail(), getCelular(), getCep(), getEndereco(), getNumero(), getComplemento(), getBairro(), getCidade(), getEstado());
     }
 }
